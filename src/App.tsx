@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Canvas } from './components/Canvas';
 import { useFiniteAutomaton } from './hooks/useFiniteAutomaton';
-import { sampleDFA, sampleNFA, samplePasswordDFA, sampleEmailNFA, samplePasswordNFA } from './core/samples';
+import { sampleDFA, samplePasswordDFA, sampleEmailNFA, samplePasswordNFA } from './core/samples';
 import { completeDFA, minimizeDFA, nfaToDFA } from './core/dfa-utils';
 import './App.css';
 

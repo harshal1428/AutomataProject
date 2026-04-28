@@ -28,6 +28,7 @@ export interface Automaton {
     symbolMode?: 'raw' | 'password-token' | 'class';
     enforceStrongPolicyAtEOF?: boolean;
     enforceEmailPolicyAtEOF?: boolean;
+    originalToMinimized?: Record<StateId, StateId>;
   };
 }
 
