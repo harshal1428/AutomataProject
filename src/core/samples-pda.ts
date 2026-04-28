@@ -1,4 +1,4 @@
-import { PDA } from './types';
+import type { PDA } from './types';
 
 // PDA: Accepts balanced brackets '()'
 export const samplePDA: PDA = {

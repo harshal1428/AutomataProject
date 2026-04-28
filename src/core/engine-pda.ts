@@ -1,4 +1,4 @@
-import { PDA, PDAConfiguration, Symbol, StateId } from './types';
+import type { PDA, PDAConfiguration, Symbol } from './types';
 
 export function computePDANextConfigs(
   pda: PDA,

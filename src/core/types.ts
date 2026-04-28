@@ -21,15 +21,19 @@ export interface Automaton {
   states: Record<StateId, State>;
   transitions: Record<string, Transition>;
   alphabet: Set<Symbol>;
+  metadata?: {
+    name: string;
+    description: string;
+    complexity: string;
+    symbolMode?: 'raw' | 'password-token' | 'class';
+    enforceStrongPolicyAtEOF?: boolean;
+    enforceEmailPolicyAtEOF?: boolean;
+  };
 }
 
-export interface DFA extends Automaton {
-  // DFA specific logic can be typed here if needed
-}
+export type DFA = Automaton;
 
-export interface NFA extends Automaton {
-  // NFA specific logic
-}
+export type NFA = Automaton;
 
 export interface PDATransition extends Transition {
   popSymbol: string;
@@ -55,4 +59,11 @@ export interface TuringMachine extends Omit<Automaton, 'transitions'> {
   transitions: Record<string, TMTransition>;
   tapeAlphabet: Set<Symbol>;
   blankSymbol: Symbol;
+}
+
+export interface TraceEntry {
+  step: number;
+  state: string;
+  symbol: string;
+  description: string;
 }

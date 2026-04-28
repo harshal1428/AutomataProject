@@ -1,5 +1,6 @@
 import React from 'react';
-import { Handle, Position, NodeProps } from '@xyflow/react';
+import { Handle, Position, type NodeProps } from '@xyflow/react';
+import type { Node } from '@xyflow/react';
 import './StateNode.css';
 
 type StateNodeData = {
@@ -9,7 +10,9 @@ type StateNodeData = {
   isActive: boolean;
 };
 
-export const StateNode: React.FC<NodeProps<StateNodeData>> = ({ data }) => {
+type StateNodeType = Node<StateNodeData, 'stateNode'>;
+
+export const StateNode: React.FC<NodeProps<StateNodeType>> = ({ data }) => {
   const { label, isInitial, isFinal, isActive } = data;
 
   return (

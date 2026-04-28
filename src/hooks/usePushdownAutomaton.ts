@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { PDA, PDAConfiguration, StateId } from '../core/types';
+import type { PDA, PDAConfiguration, TraceEntry } from '../core/types';
 import { computePDANextConfigs, isPDAAccepted } from '../core/engine-pda';
 
 export type AutomatonStatus = 'idle' | 'running' | 'accepted' | 'rejected';
@@ -9,80 +9,82 @@ export function usePushdownAutomaton(pda: PDA | null) {
   const [pointer, setPointer] = useState(0);
   const [activeConfigs, setActiveConfigs] = useState<PDAConfiguration[]>([]);
   const [status, setStatus] = useState<AutomatonStatus>('idle');
+  const [trace, setTrace] = useState<TraceEntry[]>([]);
 
-  // Derive currentStates for visualization compatibility
-  const currentStates = useMemo(() => {
-    return new Set(activeConfigs.map(c => c.stateId));
-  }, [activeConfigs]);
+  const currentStates = useMemo(
+    () => new Set(activeConfigs.map((c) => c.stateId)),
+    [activeConfigs]
+  );
 
-  // Initialize
+  const getInitialConfigs = (p: PDA): PDAConfiguration[] => {
+    const initial: PDAConfiguration[] = [];
+    for (const sid in p.states) {
+      if (p.states[sid].isInitial) initial.push({ stateId: sid, stack: [] });
+    }
+    const eps = computePDANextConfigs(p, initial, '');
+    return eps.length > 0 ? eps : initial;
+  };
+
   useEffect(() => {
     if (!pda) return;
-    
-    const initialConfigs: PDAConfiguration[] = [];
-    for (const stateId in pda.states) {
-      if (pda.states[stateId].isInitial) {
-        initialConfigs.push({
-          stateId,
-          stack: [] // Start with empty stack
-        });
-      }
-    }
-
-    // Apply initial epsilon transitions
-    const startConfigs = computePDANextConfigs(pda, initialConfigs, "");
-    setActiveConfigs(startConfigs.length > 0 ? startConfigs : initialConfigs);
+    setActiveConfigs(getInitialConfigs(pda));
     setPointer(0);
     setStatus('idle');
+    setTrace([]);
   }, [pda]);
 
-  const reset = useCallback((newInput?: string) => {
-    if (newInput !== undefined) {
-      setInput(newInput);
-    }
-    setPointer(0);
-    setStatus('idle');
-    
-    if (pda) {
-      const initialConfigs: PDAConfiguration[] = [];
-      for (const stateId in pda.states) {
-        if (pda.states[stateId].isInitial) {
-          initialConfigs.push({
-            stateId,
-            stack: []
-          });
-        }
-      }
-      const startConfigs = computePDANextConfigs(pda, initialConfigs, "");
-      setActiveConfigs(startConfigs.length > 0 ? startConfigs : initialConfigs);
-    } else {
-      setActiveConfigs([]);
-    }
-  }, [pda]);
+  const reset = useCallback(
+    (newInput?: string) => {
+      if (newInput !== undefined) setInput(newInput);
+      setPointer(0);
+      setStatus('idle');
+      setTrace([]);
+      if (pda) setActiveConfigs(getInitialConfigs(pda));
+      else setActiveConfigs([]);
+    },
+    [pda]
+  );
 
   const step = useCallback(() => {
     if (!pda || status === 'accepted' || status === 'rejected') return;
 
-    if (status === 'idle') {
-      setStatus('running');
-    }
+    if (status === 'idle') setStatus('running');
 
     if (pointer >= input.length) {
-      // End of input reached
       const accepted = isPDAAccepted(pda, activeConfigs);
-      setStatus(accepted ? 'accepted' : 'rejected');
+      const newStatus = accepted ? 'accepted' : 'rejected';
+      setStatus(newStatus);
+      setTrace((prev) => [
+        ...prev,
+        {
+          step: prev.length + 1,
+          state: activeConfigs.map((c) => c.stateId).join(', ') || '∅',
+          symbol: 'EOF',
+          description: newStatus === 'accepted' ? '✓ Accepted (empty stack)' : '✗ Rejected',
+        },
+      ]);
       return;
     }
 
     const symbol = input[pointer];
+    const fromLabel = activeConfigs.map((c) => `${c.stateId}[${c.stack.join('')}]`).join(' | ') || '∅';
     const nextConfigs = computePDANextConfigs(pda, activeConfigs, symbol);
+    const toLabel = nextConfigs.map((c) => `${c.stateId}[${c.stack.join('')}]`).join(' | ') || '∅ (dead)';
+
+    setTrace((prev) => [
+      ...prev,
+      {
+        step: prev.length + 1,
+        state: fromLabel,
+        symbol: `'${symbol}'`,
+        description: `${fromLabel} →[${symbol}]→ ${toLabel}`,
+      },
+    ]);
 
     setActiveConfigs(nextConfigs);
-    setPointer(prev => prev + 1);
+    setPointer((prev) => prev + 1);
 
-    if (nextConfigs.length === 0) {
-      setStatus('rejected');
-    }
+    if (nextConfigs.length === 0) setStatus('rejected');
   }, [pda, input, pointer, activeConfigs, status]);
 
   return {
@@ -91,8 +93,9 @@ export function usePushdownAutomaton(pda: PDA | null) {
     activeConfigs,
     currentStates,
     status,
+    trace,
     step,
     reset,
-    setInput
+    setInput,
   };
 }

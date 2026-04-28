@@ -1,4 +1,4 @@
-import { TuringMachine } from './types';
+import type { TuringMachine } from './types';
 
 // TM: Password Strength Analyzer
 // Pass 1: Scan for length (move right until B)

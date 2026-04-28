@@ -1,0 +1,113 @@
+.et-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 60px;
+}
+
+.et-empty {
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 12px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.et-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.et-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--font-mono);
+}
+
+.et-status {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.et-status--idle,
+.et-status--running {
+  background: rgba(161, 161, 170, 0.15);
+  color: var(--text-secondary);
+}
+
+.et-status--accepted {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--success);
+}
+
+.et-status--rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--error);
+}
+
+.et-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.et-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border-left: 2px solid var(--border-subtle);
+  background: var(--bg-primary);
+  transition: all var(--transition-fast);
+  font-size: 0.75rem;
+}
+
+.et-entry--latest {
+  border-left-color: var(--accent-primary);
+  background: rgba(139, 92, 246, 0.06);
+}
+
+.et-entry--accepted {
+  border-left-color: var(--success);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.et-entry--rejected {
+  border-left-color: var(--error);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.et-step {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  min-width: 28px;
+  padding-top: 1px;
+  flex-shrink: 0;
+}
+
+.et-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.et-desc {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  line-height: 1.4;
+  word-break: break-all;
+}

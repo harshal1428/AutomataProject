@@ -1,4 +1,4 @@
-import { Automaton, StateId, Symbol } from './types';
+import type { Automaton, StateId, Symbol } from './types';
 
 export function computeEpsilonClosure(
   automaton: Automaton,

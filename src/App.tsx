@@ -1,57 +1,71 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Canvas } from './components/Canvas';
 import { useFiniteAutomaton } from './hooks/useFiniteAutomaton';
-import { usePushdownAutomaton } from './hooks/usePushdownAutomaton';
-import { useTuringMachine } from './hooks/useTuringMachine';
-import { sampleDFA, sampleNFA } from './core/samples';
-import { samplePDA } from './core/samples-pda';
-import { strengthTM } from './core/samples-tm';
+import { sampleDFA, sampleNFA, samplePasswordDFA, sampleEmailNFA, samplePasswordNFA } from './core/samples';
+import { completeDFA, minimizeDFA, nfaToDFA } from './core/dfa-utils';
 import './App.css';
 
 const App: React.FC = () => {
-  const [automatonType, setAutomatonType] = useState<'DFA' | 'NFA' | 'PDA' | 'TM'>('DFA');
-  
-  const faEngine = useFiniteAutomaton(
-    automatonType === 'DFA' ? sampleDFA : (automatonType === 'NFA' ? sampleNFA : null)
+  const [automatonType, setAutomatonType] = useState<'DFA' | 'NFA'>('DFA');
+  const [isDFAMinimized, setIsDFAMinimized] = useState(false);
+
+  const normalizedDFA = useMemo(() => completeDFA(sampleDFA), []);
+  const minimizedDFA = useMemo(() => minimizeDFA(normalizedDFA), [normalizedDFA]);
+  const dfaForUse = isDFAMinimized ? minimizedDFA : normalizedDFA;
+
+  const normalizedNFA = useMemo(() => sampleEmailNFA, []);
+  const minimizedNFA = useMemo(() => minimizeDFA(nfaToDFA(sampleEmailNFA)), []);
+  const nfaForUse = isDFAMinimized ? minimizedNFA : normalizedNFA;
+
+  const normalizedPasswordNFA = useMemo(() => samplePasswordNFA, []);
+  const minimizedPasswordNFA = useMemo(() => minimizeDFA(nfaToDFA(samplePasswordNFA)), []);
+  const passwordNFAForUse = isDFAMinimized ? minimizedPasswordNFA : normalizedPasswordNFA;
+
+  const emailEngine = useFiniteAutomaton(
+    automatonType === 'DFA' ? dfaForUse : nfaForUse
   );
-  const pdaEngine = usePushdownAutomaton(automatonType === 'PDA' ? samplePDA : null);
-  const tmEngine = useTuringMachine(automatonType === 'TM' ? strengthTM : null);
+  const passwordEngine = useFiniteAutomaton(
+    automatonType === 'DFA' ? samplePasswordDFA : passwordNFAForUse
+  );
 
-  const getEngine = () => {
-    switch (automatonType) {
-      case 'PDA': return pdaEngine;
-      case 'TM': return tmEngine;
-      default: return faEngine;
-    }
-  };
-
-  const getAutomaton = () => {
-    switch (automatonType) {
-      case 'DFA': return sampleDFA;
-      case 'NFA': return sampleNFA;
-      case 'PDA': return samplePDA;
-      case 'TM': return strengthTM;
-    }
-  };
-
-  const engine = getEngine();
-  const automaton = getAutomaton();
+  const engine = emailEngine;
+  const automaton = automatonType === 'DFA' ? dfaForUse : nfaForUse;
 
   return (
     <div className="app-container">
       <header className="app-header glass-panel">
         <h1 className="text-gradient">Automata Theory Visualizer</h1>
+        <div className="app-header-actions">
+          <div className="sigma-hint">Σ = &#123; local, @, a-z, ., other &#125;</div>
+          <a
+            className="dfa-simulator-button"
+            href="https://dfa-simulator-opal.vercel.app"
+          >
+            DFA Simulator
+          </a>
+        </div>
       </header>
       <main className="app-main">
-        <Sidebar 
+        <Sidebar
           automatonType={automatonType}
-          setAutomatonType={setAutomatonType}
+          setAutomatonType={(type) => {
+            setAutomatonType(type);
+            if (type !== 'DFA') setIsDFAMinimized(false);
+          }}
+          isDFAMinimized={isDFAMinimized}
+          onToggleDFAMinimize={() => setIsDFAMinimized((prev) => !prev)}
+          automaton={automaton}
           engine={engine}
+          secondaryEngine={passwordEngine}
         />
-        <Canvas 
-          automaton={automaton} 
+        <Canvas
+          automaton={automaton}
           activeStates={engine.currentStates}
+          secondaryAutomaton={automatonType === 'DFA' ? samplePasswordDFA : passwordNFAForUse}
+          secondaryActiveStates={passwordEngine.currentStates}
+          secondaryTitle={automatonType === 'DFA' ? 'Password DFA (Lower Reference Pane)' : 'Password NFA (Lower Reference Pane)'}
+          primaryTitle={automatonType === 'DFA' ? 'Email DFA (Upper Interactive Pane)' : 'Email NFA (Upper Interactive Pane)'}
         />
       </main>
     </div>

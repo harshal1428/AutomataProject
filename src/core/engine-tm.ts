@@ -1,4 +1,4 @@
-import { TuringMachine, StateId } from './types';
+import type { TuringMachine, StateId } from './types';
 
 export function computeTMStep(
   tm: TuringMachine,
